@@ -1,0 +1,370 @@
+{
+  "name": "Band Tour - Venue Data Enrichment",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enrich-venue",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "query": "MATCH (v:Venue {name: $venueName, city: $city, state: $state}) RETURN v",
+        "parameters": "={{ {venueName: $json.venueName, city: $json.city, state: $json.state} }}"
+      },
+      "name": "Get Venue Data",
+      "type": "n8n-nodes-base.neo4j",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "neo4j": {
+          "id": "1",
+          "name": "Neo4j account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.records.length }}",
+              "operation": "equal",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "name": "Venue Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": false, \"message\": \"Venue not found. Please run venue-research workflow first.\"} }}",
+        "options": {}
+      },
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yelp.com/v3/businesses/search?term={{ $json.records[0].v.properties.name }}&location={{ $json.records[0].v.properties.city }},{{ $json.records[0].v.properties.state }}&limit=1",
+        "authentication": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.yelpApiKey }}"
+            }
+          ]
+        }
+      },
+      "name": "Yelp API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openweathermap.org/data/2.5/forecast?lat={{ $json.records[0].v.properties.latitude }}&lon={{ $json.records[0].v.properties.longitude }}&appid={{ $json.weatherApiKey }}&units=imperial"
+      },
+      "name": "Weather API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=1000&type=parking&key={{ $json.googleApiKey }}"
+      },
+      "name": "Parking Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=1000&type=restaurant&key={{ $json.googleApiKey }}"
+      },
+      "name": "Nearby Restaurants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=5000&type=lodging&key={{ $json.googleApiKey }}"
+      },
+      "name": "Nearby Hotels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "venueName",
+              "value": "={{ $json.records[0].v.properties.name }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.records[0].v.properties.city }}"
+            },
+            {
+              "name": "state",
+              "value": "={{ $json.records[0].v.properties.state }}"
+            },
+            {
+              "name": "yelpRating",
+              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].rating : 'N/A' }}"
+            },
+            {
+              "name": "yelpReviewCount",
+              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].review_count : 0 }}"
+            },
+            {
+              "name": "yelpUrl",
+              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].url : 'N/A' }}"
+            },
+            {
+              "name": "yelpPhone",
+              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].phone : 'N/A' }}"
+            },
+            {
+              "name": "yelpCategories",
+              "value": "={{ $json.businesses && $json.businesses[0] && $json.businesses[0].categories ? $json.businesses[0].categories.map(c => c.title).join(', ') : 'N/A' }}"
+            },
+            {
+              "name": "weatherForecast",
+              "value": "={{ $json.list ? $json.list.slice(0, 5).map(day => ({ date: day.dt_txt, temp: day.main.temp, description: day.weather[0].description })) : [] }}"
+            },
+            {
+              "name": "nearbyParking",
+              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
+            },
+            {
+              "name": "nearbyRestaurants",
+              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
+            },
+            {
+              "name": "nearbyHotels",
+              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Process Enriched Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "query": "MATCH (v:Venue {name: $venueName, city: $city, state: $state})\nSET v.yelpRating = $yelpRating,\n    v.yelpReviewCount = $yelpReviewCount,\n    v.yelpUrl = $yelpUrl,\n    v.yelpPhone = $yelpPhone,\n    v.yelpCategories = $yelpCategories,\n    v.weatherForecast = $weatherForecast,\n    v.nearbyParking = $nearbyParking,\n    v.nearbyRestaurants = $nearbyRestaurants,\n    v.nearbyHotels = $nearbyHotels,\n    v.lastEnriched = datetime()\nRETURN v",
+        "parameters": "={{ $json }}"
+      },
+      "name": "Update Venue in Neo4j",
+      "type": "n8n-nodes-base.neo4j",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        400
+      ],
+      "credentials": {
+        "neo4j": {
+          "id": "1",
+          "name": "Neo4j account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": true, \"message\": \"Venue data enriched successfully\", \"data\": $json} }}",
+        "options": {}
+      },
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2660,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Venue Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Venue Data": {
+      "main": [
+        [
+          {
+            "node": "Venue Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Venue Exists?": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Yelp API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Yelp API": {
+      "main": [
+        [
+          {
+            "node": "Weather API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather API": {
+      "main": [
+        [
+          {
+            "node": "Parking Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parking Info": {
+      "main": [
+        [
+          {
+            "node": "Nearby Restaurants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Restaurants": {
+      "main": [
+        [
+          {
+            "node": "Nearby Hotels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Hotels": {
+      "main": [
+        [
+          {
+            "node": "Process Enriched Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Enriched Data": {
+      "main": [
+        [
+          {
+            "node": "Update Venue in Neo4j",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Venue in Neo4j": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
