@@ -1,0 +1,174 @@
+{
+  "name": "Band Tour - Venue Research",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "research-venue",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={{ $json.venueName }}+{{ $json.city }}+{{ $json.state }}&inputtype=textquery&fields=name,formatted_address,rating,user_ratings_total,website,geometry&key={{ $json.apiKey }}"
+      },
+      "name": "Google Places API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "venueName",
+              "value": "={{ $json.venueName }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "name": "state",
+              "value": "={{ $json.state }}"
+            },
+            {
+              "name": "address",
+              "value": "={{ $json.candidates && $json.candidates[0] ? $json.candidates[0].formatted_address : 'Not found' }}"
+            },
+            {
+              "name": "rating",
+              "value": "={{ $json.candidates && $json.candidates[0] ? $json.candidates[0].rating : 0 }}"
+            },
+            {
+              "name": "totalRatings",
+              "value": "={{ $json.candidates && $json.candidates[0] ? $json.candidates[0].user_ratings_total : 0 }}"
+            },
+            {
+              "name": "website",
+              "value": "={{ $json.candidates && $json.candidates[0] && $json.candidates[0].website ? $json.candidates[0].website : 'Not found' }}"
+            },
+            {
+              "name": "latitude",
+              "value": "={{ $json.candidates && $json.candidates[0] && $json.candidates[0].geometry ? $json.candidates[0].geometry.location.lat : 0 }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.candidates && $json.candidates[0] && $json.candidates[0].geometry ? $json.candidates[0].geometry.location.lng : 0 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Process Venue Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "query": "MERGE (v:Venue {name: $venueName, city: $city, state: $state})\nON CREATE SET v.address = $address, v.rating = $rating, v.totalRatings = $totalRatings, v.website = $website, v.latitude = $latitude, v.longitude = $longitude\nON MATCH SET v.address = $address, v.rating = $rating, v.totalRatings = $totalRatings, v.website = $website, v.latitude = $latitude, v.longitude = $longitude\nRETURN v",
+        "parameters": "={{ $json }}"
+      },
+      "name": "Neo4j",
+      "type": "n8n-nodes-base.neo4j",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        300
+      ],
+      "credentials": {
+        "neo4j": {
+          "id": "1",
+          "name": "Neo4j account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": true, \"message\": \"Venue research completed\", \"data\": $json} }}",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Places API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Places API": {
+      "main": [
+        [
+          {
+            "node": "Process Venue Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Venue Data": {
+      "main": [
+        [
+          {
+            "node": "Neo4j",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neo4j": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
