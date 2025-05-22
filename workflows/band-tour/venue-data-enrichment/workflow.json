@@ -156,23 +156,23 @@
             },
             {
               "name": "wikipediaInfo",
-              "value": "The Shrine is a world music venue in New York City that showcases diverse musical acts from around the globe. Located in Harlem, it's known for its intimate setting and vibrant atmosphere."
+              "value": "={{ $('Wikipedia Info').item.json.query && $('Wikipedia Info').item.json.query.pages ? Object.values($('Wikipedia Info').item.json.query.pages)[0].extract || 'No Wikipedia information found for ' + $json.venueName : 'No Wikipedia information found for ' + $json.venueName }}"
             },
             {
               "name": "areaDetails",
-              "value": "Harlem, New York. Historic neighborhood with rich cultural heritage, known for jazz, soul food, and the Apollo Theater."
+              "value": "={{ $('Venue Area Details').item.json.address ? JSON.stringify($('Venue Area Details').item.json.address) : 'No area details found for ' + $json.venueName }}"
             },
             {
               "name": "nearbyParking",
-              "value": "[{\"name\":\"Adam Clayton Powell Jr Blvd Parking\",\"distance\":0.8,\"address\":\"Adam Clayton Powell Jr Blvd, New York, NY\"}]"
+              "value": "={{ Array.isArray($('Nearby Parking').item.json) && $('Nearby Parking').item.json.length > 0 ? JSON.stringify($('Nearby Parking').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
             },
             {
               "name": "nearbyHotels",
-              "value": "[{\"name\":\"Aloft Harlem\",\"distance\":0.7,\"address\":\"2296 Frederick Douglass Blvd, New York, NY 10027\"}, {\"name\":\"The Park Ave North\",\"distance\":0.9,\"address\":\"1642 Park Ave, New York, NY 10035\"}]"
+              "value": "={{ Array.isArray($('Nearby Hotels').item.json) && $('Nearby Hotels').item.json.length > 0 ? JSON.stringify($('Nearby Hotels').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
             },
             {
               "name": "nearbyRestaurants",
-              "value": "[{\"name\":\"Red Rooster\",\"distance\":0.5,\"address\":\"310 Lenox Ave, New York, NY 10027\"}, {\"name\":\"Sylvia's\",\"distance\":0.6,\"address\":\"328 Malcolm X Blvd, New York, NY 10027\"}]"
+              "value": "={{ Array.isArray($('Nearby Restaurants').item.json) && $('Nearby Restaurants').item.json.length > 0 ? JSON.stringify($('Nearby Restaurants').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
             },
             {
               "name": "localTime",
