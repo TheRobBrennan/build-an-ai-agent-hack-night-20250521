@@ -1,0 +1,290 @@
+{
+  "name": "NASA Astronomy Picture of the Day (MMS)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        40
+      ],
+      "id": "e6612366-f456-4e1e-9c29-c509b1b6424e"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "name": "NASA",
+      "type": "n8n-nodes-base.nasa",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        40
+      ],
+      "id": "ed1ccbb9-eec2-4027-9b4f-5301d9d37f79",
+      "credentials": {
+        "nasaApi": {
+          "id": "isXpQMy199IL1YVg",
+          "name": "NASA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.media_type }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Check Media Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -380,
+        40
+      ],
+      "id": "0e7249e0-4001-4d89-90e0-37d4abe6ef26"
+    },
+    {
+      "parameters": {
+        "functionCode": "// For image media type\nconst item = JSON.parse(JSON.stringify(items[0].json));\n\nreturn [{\n  json: {\n    title: item.title,\n    explanation: item.explanation,\n    date: item.date,\n    imageUrl: item.url,\n    copyright: item.copyright || 'NASA',\n    hdUrl: item.hdurl || item.url,\n    message: `NASA Astronomy Picture of the Day: ${item.title}\\n\\nDate: ${item.date}\\n\\n${item.explanation.substring(0, 140)}...\\n\\nCopyright: ${item.copyright || 'NASA'}`\n  }\n}];"
+      },
+      "name": "Format Image Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        20
+      ],
+      "id": "0d21e493-24c3-4d0e-a908-94a155ecbe46"
+    },
+    {
+      "parameters": {
+        "functionCode": "// For video media type\nconst item = JSON.parse(JSON.stringify(items[0].json));\n\nreturn [{\n  json: {\n    title: item.title,\n    explanation: item.explanation,\n    date: item.date,\n    videoUrl: item.url,\n    copyright: item.copyright || 'NASA',\n    message: `NASA Astronomy Picture of the Day: ${item.title} (Video)\\n\\nDate: ${item.date}\\n\\n${item.explanation.substring(0, 140)}...\\n\\nVideo: ${item.url}\\n\\nCopyright: ${item.copyright || 'NASA'}`\n  }\n}];"
+      },
+      "name": "Format Video Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        200
+      ],
+      "id": "e830a9ac-82fa-4eef-b4b8-6a948c75ae09"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/ACf6895d133ddf2c2fbcb6fac2fcd82316/Messages.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twilioApi",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "+18774482079"
+            },
+            {
+              "name": "To",
+              "value": "+13605313830"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.title }}\n\n{{ $json.explanation }}"
+            },
+            {
+              "name": "MediaUrl",
+              "value": "={{ $json.imageUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Send MMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        120,
+        80
+      ],
+      "id": "ab90ec1f-e454-4ad4-b920-3b9e009f8816",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "NyjAAixCM8j9xWYr",
+          "name": "Twilio account"
+        },
+        "twilioApi": {
+          "id": "NyjAAixCM8j9xWYr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/ACf6895d133ddf2c2fbcb6fac2fcd82316/Messages.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twilioApi",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "+18774482079"
+            },
+            {
+              "name": "To",
+              "value": "+13605313830"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "MediaUrl",
+              "value": "={{ $json.videoUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Send Video MMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        100,
+        240
+      ],
+      "id": "45a63a7c-6028-4901-826e-d5254b058647",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "NyjAAixCM8j9xWYr",
+          "name": "Twilio account"
+        },
+        "twilioApi": {
+          "id": "NyjAAixCM8j9xWYr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Twilio configuration needed\nUpdate with your Account SID",
+        "height": 400,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "bd5aaf16-3e6f-4fb7-9f9c-d1215f248434",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "NASA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NASA": {
+      "main": [
+        [
+          {
+            "node": "Check Media Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Media Type": {
+      "main": [
+        [
+          {
+            "node": "Format Image Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Video Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Image Data": {
+      "main": [
+        [
+          {
+            "node": "Send MMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Video Data": {
+      "main": [
+        [
+          {
+            "node": "Send Video MMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "016a41a5-3c23-493d-9056-93b48e34926d",
+  "meta": {
+    "instanceId": "bd29bfc42571b88eb03eb63b0d886b5dea6cf0813901231e3aa458c693529395"
+  },
+  "id": "kTBlzndRYmoMKuKZ",
+  "tags": []
+}

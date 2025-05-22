@@ -1,0 +1,198 @@
+{
+  "name": "n8n Quickstart - Your first workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        160
+      ],
+      "id": "552dff1c-e247-4022-ae87-2d064621ce42",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "donkiSolarFlare",
+        "additionalFields": {
+          "startDate": "={{ $today.minus(7, 'weeks') }}"
+        }
+      },
+      "type": "n8n-nodes-base.nasa",
+      "typeVersion": 1,
+      "position": [
+        260,
+        160
+      ],
+      "id": "9277e6a3-d337-4996-a5f6-3c0e20107f76",
+      "name": "NASA",
+      "credentials": {
+        "nasaApi": {
+          "id": "isXpQMy199IL1YVg",
+          "name": "NASA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.classType }}",
+              "rightValue": "X",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        160
+      ],
+      "id": "718df51e-5aad-4576-92a4-7e88208f5f28",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://www.postb.in/1747459018275-4371733420994",
+        "responseFormat": "string",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "binContent",
+              "value": "=There was a solar flare of class {{$json[\"classType\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        700,
+        60
+      ],
+      "id": "43e9c5b0-8d2c-46c3-99c1-b90e19ca4a17",
+      "name": "SendToPostBinTrue"
+    },
+    {
+      "parameters": {
+        "content": "## Setup required\n\nYou need to create a NASA account and credentials, and use a valid Postbin ID — see [the documentation](https://docs.n8n.io/try-it-out/longer-introduction/)",
+        "height": 120,
+        "width": 600
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b387e383-6dfd-4aef-9aef-7b79f723f393",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://www.postb.in/1747459018275-4371733420994",
+        "responseFormat": "string",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "binContent",
+              "value": "=There was a solar flare of class {{$json[\"classType\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        700,
+        260
+      ],
+      "id": "8e4e2d11-0d18-4621-93c6-87bff6844780",
+      "name": "SendToPostBinFalse"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "NASA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NASA": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "SendToPostBinTrue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendToPostBinFalse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cae67fb5-9a6a-42a1-abdf-580ce160c06d",
+  "meta": {
+    "instanceId": "bd29bfc42571b88eb03eb63b0d886b5dea6cf0813901231e3aa458c693529395"
+  },
+  "id": "jUWWpJPtaqSPNA0k",
+  "tags": []
+}
