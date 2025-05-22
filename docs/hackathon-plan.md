@@ -6,7 +6,7 @@ Create a tour management system for Wyatt Olney & The Wreckage's upcoming East C
 
 ## Goal
 
-Build a functional prototype that helps manage tour logistics, venue information, and fan engagement for the band's East Coast tour from July 24 to August 4, 2025.
+Build a functional prototype that helps manage tour logistics, venue information, and fan engagement for the band's East Coast tour from July 24th to August 4th, 2025.
 
 ## Tech Stack
 
