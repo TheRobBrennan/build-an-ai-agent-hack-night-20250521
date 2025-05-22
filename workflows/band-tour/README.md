@@ -13,11 +13,12 @@ These workflows are part of the Band Tour Management System for Wyatt Olney & Th
 ## Setup Instructions
 
 1. Start the Docker containers:
+
    ```bash
    npm start
    ```
 
-2. Access n8n at http://localhost:5678
+2. Access n8n at [http://localhost:5678](http://localhost:5678)
 
 3. Import the workflow JSON files from this directory
 
@@ -34,6 +35,7 @@ These workflows are part of the Band Tour Management System for Wyatt Olney & Th
 Sends SMS/MMS notifications about tour updates, venue information, or gear checklists.
 
 **Example POST request:**
+
 ```json
 {
   "from": "+1234567890",  // Your Twilio number
@@ -50,6 +52,7 @@ Sends SMS/MMS notifications about tour updates, venue information, or gear check
 Researches venue information using Google Places API and stores it in Neo4j.
 
 **Example POST request:**
+
 ```json
 {
   "venueName": "Shrine",
@@ -66,6 +69,7 @@ Researches venue information using Google Places API and stores it in Neo4j.
 Generates QR codes for fan engagement, merchandise, or donations.
 
 **Example POST request:**
+
 ```json
 {
   "type": "merch",
@@ -77,7 +81,7 @@ Generates QR codes for fan engagement, merchandise, or donations.
 
 ## Neo4j Database
 
-The tour data is stored in a Neo4j graph database. You can access the Neo4j browser at http://localhost:7474 (credentials: neo4j/bandtour2025).
+The tour data is stored in a Neo4j graph database. You can access the Neo4j browser at [http://localhost:7474](http://localhost:7474) (credentials: neo4j/bandtour2025).
 
 To initialize the database with tour data, run the Cypher script in `/docs/neo4j-init.cypher`.
 
