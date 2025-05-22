@@ -1,5 +1,7 @@
 # Build an AI Agent Hack Night - May 21st, 2025
 
+📝 [View my hackathon project ideas and notes](docs/README.md)
+
 ## Demo
 
 ### Hello World Workflow
