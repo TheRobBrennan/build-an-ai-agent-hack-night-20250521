@@ -22,9 +22,8 @@ CREATE (tour:Tour {
 MATCH (b:Band {name: "Wyatt Olney & The Wreckage"}), (t:Tour {name: "East Coast Tour 2025"})
 CREATE (b)-[:PERFORMING]->(t);
 
-// Create Transportation nodes (suggested/unconfirmed)
-CREATE (flight1:Transportation {
-  type: "Flight",
+// Create Flight nodes (suggested/unconfirmed)
+CREATE (flight1:Flight {
   status: "Suggested/Unconfirmed",
   carrier: "Alaska Airlines",
   flightNumber: "AS 378",
@@ -36,8 +35,7 @@ CREATE (flight1:Transportation {
   arrivalTime: "2025-07-24T18:08:00"
 });
 
-CREATE (flight2:Transportation {
-  type: "Flight",
+CREATE (flight2:Flight {
   status: "Suggested/Unconfirmed",
   carrier: "Alaska Airlines",
   flightNumber: "AS 379",
@@ -47,15 +45,6 @@ CREATE (flight2:Transportation {
   arrivalCity: "Seattle",
   arrivalAirport: "SEA",
   arrivalTime: "2025-08-04T22:00:00"
-});
-
-CREATE (van:Transportation {
-  type: "Van",
-  status: "Confirmed",
-  description: "Fan-driven gear transport",
-  departureCity: "Seattle",
-  arrivalCity: "Baltimore",
-  notes: "Two fans driving gear cross-country"
 });
 
 // Create Venue nodes
@@ -205,7 +194,7 @@ CREATE (t)-[:INCLUDES]->(s);
 // RETURN s.date as Date, v.name as Venue, v.city as City, v.state as State
 // ORDER BY s.date;
 
-// Query 2: Get transportation details (suggested/unconfirmed)
-// MATCH (t:Transportation)
-// RETURN t.type as Type, t.status as Status, t.departureCity as From, t.arrivalCity as To, 
-//        CASE WHEN t.type = 'Flight' THEN t.flightNumber ELSE '' END as FlightNumber;
+// Query 2: Get flight details (suggested/unconfirmed)
+// MATCH (f:Flight)
+// RETURN f.status as Status, f.carrier as Carrier, f.flightNumber as FlightNumber,
+//        f.departureCity as From, f.arrivalCity as To, f.departureTime as DepartureTime, f.arrivalTime as ArrivalTime;
