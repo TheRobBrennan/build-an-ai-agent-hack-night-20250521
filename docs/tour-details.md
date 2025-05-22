@@ -4,13 +4,14 @@
 
 **Tour Dates:** July 24th - August 4th, 2025  
 **Band:** Wyatt Olney & The Wreckage (Seattle-based hard rock band)  
-**Transportation:** Flying from SEA to BWI, with gear transported separately by van
+**Website:** [https://woatw.com](https://woatw.com)  
+**Transportation:** Flights being arranged from SEA to BWI (suggested/unconfirmed)
 
 ## Tour Schedule
 
 | Date | City | Venue | Details | Status |
 |------|------|-------|---------|--------|
-| July 24, 2025 | Seattle → Baltimore | Flight AS 378 | 10:03am PDT departure, 6:08pm EDT arrival | ✅ Confirmed |
+| July 24, 2025 | Seattle → Baltimore | Flight AS 378 | 10:03am PDT departure, 6:08pm EDT arrival | ⚠️ Suggested/Unconfirmed |
 | July 25, 2025 | Cumberland, MD | Rock the Mountains Festival | VIP performance in tent | ✅ Confirmed |
 | July 26, 2025 | Cumberland, MD | Rock the Mountains Festival | Main show (8,000+ attendees) | ✅ Confirmed |
 | July 27, 2025 | Washington, DC | Simple Bar and Grill | Evening show | ✅ Confirmed |
@@ -21,7 +22,7 @@
 | August 1, 2025 | Somerville, NJ | The Rock Shack | Evening show | ✅ Confirmed |
 | August 2, 2025 | New York, NY | Cobra Club | Evening show | ✅ Confirmed |
 | August 3, 2025 | TBA | TBA | TBA | ❓ Pending |
-| August 4, 2025 | Baltimore → Seattle | Flight AS 379 | 7:10pm EDT departure, 10:00pm PDT arrival | ✅ Confirmed |
+| August 4, 2025 | Baltimore → Seattle | Flight AS 379 | 7:10pm EDT departure, 10:00pm PDT arrival | ⚠️ Suggested/Unconfirmed |
 
 ## Venue Details
 
@@ -76,7 +77,7 @@
 
 ## Logistics Notes
 
-- Two fans will be driving a van with gear (drums, amps, guitars, merchandise, etc.) from Seattle to meet the band at BWI
+- Transportation arrangements for gear still to be determined
 - The band has never played at any of these venues before
-- Need to generate packing lists and gear requirements for each venue
+- Venue research and contact information to be gathered
 - Need to identify local bands to potentially share the bill with
