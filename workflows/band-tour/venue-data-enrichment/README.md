@@ -32,56 +32,39 @@ npm start
 
 This will start n8n at [http://localhost:5678](http://localhost:5678). Log in with your credentials.
 
-### Step 2: Install Neo4j Node for n8n
+### Step 2: Set Up HTTP Basic Auth for Neo4j
 
-The Neo4j integration needs to be installed in n8n:
-
-1. In n8n, click on the **Settings** icon in the left sidebar
-2. Go to **Community Nodes**
-3. Click **Install** and search for "n8n-nodes-base.neo4j"
-4. Click **Install** next to the Neo4j node
-5. Restart n8n after installation:
-
-```bash
-npm run restart
-```
-
-### Step 3: Set Up Neo4j Connection
-
-After restarting n8n:
+Our workflow uses HTTP Basic Auth to connect to Neo4j's REST API:
 
 1. In n8n, click on the **Settings** icon in the left sidebar
 2. Go to **Credentials**
 3. Click **Create New Credentials**
-4. Select **Neo4j** (it should now appear in the list)
+4. Select **HTTP Basic Auth**
 5. Fill in the following details:
-   - **Credential Name**: Neo4j account
-   - **Host**: localhost (or your Neo4j host)
-   - **Port**: 7687 (default Neo4j port)
-   - **User**: neo4j (default username)
-   - **Password**: Your Neo4j password
-   - **Database**: Leave blank for default
+   - **Credential Name**: Neo4j HTTP Auth
+   - **User**: neo4j
+   - **Password**: bandtour2025 (from your docker-compose.yml)
 6. Click **Save**
 
-### Step 4: Import the Workflow
+### Step 3: Import the Workflow
 
 1. In n8n, go to **Workflows** in the left sidebar
 2. Click **Import from File**
 3. Select the `workflow.json` file from this directory
 4. Click **Import**
 
-### Step 5: Configure the Workflow
+### Step 4: Configure the Workflow
 
-1. In the imported workflow, click on each Neo4j node
-2. Make sure the Neo4j credential is selected (should be auto-selected if named "Neo4j account")
+1. In the imported workflow, click on each HTTP Request node that connects to Neo4j
+2. Make sure the HTTP Basic Auth credential is selected (should be auto-selected if named "Neo4j HTTP Auth")
 3. Click **Save** to save the workflow
 
-### Step 6: Activate the Workflow
+### Step 5: Activate the Workflow
 
 1. Click the **Active** toggle switch in the top-right corner
 2. Confirm activation
 
-### Step 7: Test the Workflow
+### Step 6: Test the Workflow
 
 #### Option 1: Using curl
 
@@ -111,14 +94,14 @@ curl -X POST http://localhost:5678/webhook/enrich-venue \
 
 4. Click **Send**
 
-### Step 8: View Results
+### Step 7: View Results
 
 1. In n8n, go to **Executions** in the left sidebar
 2. Find your workflow execution
 3. Click to view details
 4. You can see the data at each step of the process
 
-### Step 9: Verify Data in Neo4j
+### Step 8: Verify Data in Neo4j
 
 1. Open your Neo4j browser (typically at [http://localhost:7474](http://localhost:7474))
 2. Run the following Cypher query:
