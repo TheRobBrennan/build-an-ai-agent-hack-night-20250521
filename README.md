@@ -1,4 +1,4 @@
-# Explore n8n
+# Build an AI Agent Hack Night - May 21st, 2025
 
 ## Demo
 
@@ -36,8 +36,8 @@ This repository contains explorations and automations using [n8n](https://n8n.io
 1. Clone this repository and install dependencies:
 
    ```bash
-   git clone https://github.com/TheRobBrennan/explore-n8n.git
-   cd explore-n8n
+   git clone https://github.com/TheRobBrennan/build-an-ai-agent-hack-night-20250521.git
+   cd build-an-ai-agent-hack-night-20250521
    npm install
    ```
 

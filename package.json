@@ -1,14 +1,14 @@
 {
-  "name": "explore-n8n",
-  "version": "0.4.1",
-  "description": "Explorations and automations using n8n workflow automation tool",
-  "homepage": "https://github.com/TheRobBrennan/explore-n8n#readme",
+  "name": "build-an-ai-agent-hack-night-20250521",
+  "version": "0.0.0",
+  "description": "Build an AI Agent Hack Night - May 21st, 2025",
+  "homepage": "https://github.com/TheRobBrennan/build-an-ai-agent-hack-night-20250521#readme",
   "bugs": {
-    "url": "https://github.com/TheRobBrennan/explore-n8n/issues"
+    "url": "https://github.com/TheRobBrennan/build-an-ai-agent-hack-night-20250521/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TheRobBrennan/explore-n8n.git"
+    "url": "git+https://github.com/TheRobBrennan/build-an-ai-agent-hack-night-20250521.git"
   },
   "license": "MIT",
   "author": "Rob Brennan <rob@sploosh.ai>",
