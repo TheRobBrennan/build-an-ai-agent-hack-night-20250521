@@ -81,18 +81,9 @@
     },
     {
       "parameters": {
-        "url": "=https://api.yelp.com/v3/businesses/search?term={{ $json.records[0].v.properties.name }}&location={{ $json.records[0].v.properties.city }},{{ $json.records[0].v.properties.state }}&limit=1",
-        "authentication": "headerAuth",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $json.yelpApiKey }}"
-            }
-          ]
-        }
+        "url": "=https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&redirects=true&titles={{ $json.records[0].v.properties.name }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}"
       },
-      "name": "Yelp API",
+      "name": "Wikipedia Info",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
@@ -102,9 +93,19 @@
     },
     {
       "parameters": {
-        "url": "=https://api.openweathermap.org/data/2.5/forecast?lat={{ $json.records[0].v.properties.latitude }}&lon={{ $json.records[0].v.properties.longitude }}&appid={{ $json.weatherApiKey }}&units=imperial"
+        "url": "=https://nominatim.openstreetmap.org/search?q={{ $json.records[0].v.properties.name }}%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
       },
-      "name": "Weather API",
+      "name": "OpenStreetMap Geocoding",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
@@ -114,9 +115,19 @@
     },
     {
       "parameters": {
-        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=1000&type=parking&key={{ $json.googleApiKey }}"
+        "url": "=https://nominatim.openstreetmap.org/reverse?lat={{ $json[0].lat }}&lon={{ $json[0].lon }}&format=json&zoom=16&addressdetails=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
       },
-      "name": "Parking Info",
+      "name": "Venue Area Details",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
@@ -126,9 +137,19 @@
     },
     {
       "parameters": {
-        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=1000&type=restaurant&key={{ $json.googleApiKey }}"
+        "url": "=https://nominatim.openstreetmap.org/search?q=parking%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
       },
-      "name": "Nearby Restaurants",
+      "name": "Nearby Parking",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
@@ -138,13 +159,45 @@
     },
     {
       "parameters": {
-        "url": "=https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={{ $json.records[0].v.properties.latitude }},{{ $json.records[0].v.properties.longitude }}&radius=5000&type=lodging&key={{ $json.googleApiKey }}"
+        "url": "=https://nominatim.openstreetmap.org/search?q=hotels%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
       },
       "name": "Nearby Hotels",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
         2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/search?q=restaurants%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Nearby Restaurants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2220,
         400
       ]
     },
@@ -166,40 +219,32 @@
               "value": "={{ $json.records[0].v.properties.state }}"
             },
             {
-              "name": "yelpRating",
-              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].rating : 'N/A' }}"
+              "name": "wikipediaInfo",
+              "value": "={{ $json.query && $json.query.pages ? Object.values($json.query.pages)[0].extract || 'No Wikipedia information found' : 'No Wikipedia information found' }}"
             },
             {
-              "name": "yelpReviewCount",
-              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].review_count : 0 }}"
-            },
-            {
-              "name": "yelpUrl",
-              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].url : 'N/A' }}"
-            },
-            {
-              "name": "yelpPhone",
-              "value": "={{ $json.businesses && $json.businesses[0] ? $json.businesses[0].phone : 'N/A' }}"
-            },
-            {
-              "name": "yelpCategories",
-              "value": "={{ $json.businesses && $json.businesses[0] && $json.businesses[0].categories ? $json.businesses[0].categories.map(c => c.title).join(', ') : 'N/A' }}"
-            },
-            {
-              "name": "weatherForecast",
-              "value": "={{ $json.list ? $json.list.slice(0, 5).map(day => ({ date: day.dt_txt, temp: day.main.temp, description: day.weather[0].description })) : [] }}"
+              "name": "areaDetails",
+              "value": "={{ $json.address ? $json.address : 'No area details found' }}"
             },
             {
               "name": "nearbyParking",
-              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
-            },
-            {
-              "name": "nearbyRestaurants",
-              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
+              "value": "={{ $json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name })) }}"
             },
             {
               "name": "nearbyHotels",
-              "value": "={{ $json.results ? $json.results.slice(0, 5).map(place => ({ name: place.name, rating: place.rating, vicinity: place.vicinity })) : [] }}"
+              "value": "={{ $json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name })) }}"
+            },
+            {
+              "name": "nearbyRestaurants",
+              "value": "={{ $json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name })) }}"
+            },
+            {
+              "name": "localTime",
+              "value": "={{ new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }) }}"
+            },
+            {
+              "name": "lastUpdated",
+              "value": "={{ new Date().toISOString() }}"
             }
           ]
         },
@@ -209,21 +254,21 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
       "position": [
-        2220,
+        2440,
         400
       ]
     },
     {
       "parameters": {
         "operation": "execute",
-        "query": "MATCH (v:Venue {name: $venueName, city: $city, state: $state})\nSET v.yelpRating = $yelpRating,\n    v.yelpReviewCount = $yelpReviewCount,\n    v.yelpUrl = $yelpUrl,\n    v.yelpPhone = $yelpPhone,\n    v.yelpCategories = $yelpCategories,\n    v.weatherForecast = $weatherForecast,\n    v.nearbyParking = $nearbyParking,\n    v.nearbyRestaurants = $nearbyRestaurants,\n    v.nearbyHotels = $nearbyHotels,\n    v.lastEnriched = datetime()\nRETURN v",
+        "query": "MATCH (v:Venue {name: $venueName, city: $city, state: $state})\nSET v.wikipediaInfo = $wikipediaInfo,\n    v.areaDetails = $areaDetails,\n    v.nearbyParking = $nearbyParking,\n    v.nearbyHotels = $nearbyHotels,\n    v.nearbyRestaurants = $nearbyRestaurants,\n    v.localTime = $localTime,\n    v.lastUpdated = $lastUpdated,\n    v.lastEnriched = datetime()\nRETURN v",
         "parameters": "={{ $json }}"
       },
       "name": "Update Venue in Neo4j",
       "type": "n8n-nodes-base.neo4j",
       "typeVersion": 1,
       "position": [
-        2440,
+        2660,
         400
       ],
       "credentials": {
@@ -243,7 +288,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        2660,
+        2880,
         400
       ]
     }
@@ -282,47 +327,47 @@
         ],
         [
           {
-            "node": "Yelp API",
+            "node": "Wikipedia Info",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Yelp API": {
+    "Wikipedia Info": {
       "main": [
         [
           {
-            "node": "Weather API",
+            "node": "OpenStreetMap Geocoding",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Weather API": {
+    "OpenStreetMap Geocoding": {
       "main": [
         [
           {
-            "node": "Parking Info",
+            "node": "Venue Area Details",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parking Info": {
+    "Venue Area Details": {
       "main": [
         [
           {
-            "node": "Nearby Restaurants",
+            "node": "Nearby Parking",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Nearby Restaurants": {
+    "Nearby Parking": {
       "main": [
         [
           {
@@ -334,6 +379,17 @@
       ]
     },
     "Nearby Hotels": {
+      "main": [
+        [
+          {
+            "node": "Nearby Restaurants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Restaurants": {
       "main": [
         [
           {
