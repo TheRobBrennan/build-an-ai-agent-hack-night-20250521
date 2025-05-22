@@ -49,6 +49,15 @@ CREATE (flight2:Transportation {
   arrivalTime: "2025-08-04T22:00:00"
 });
 
+CREATE (van:Transportation {
+  type: "Van",
+  status: "Confirmed",
+  description: "Fan-driven gear transport",
+  departureCity: "Seattle",
+  arrivalCity: "Baltimore",
+  notes: "Two fans driving gear cross-country"
+});
+
 // Create Venue nodes
 CREATE (rtm:Venue {
   name: "Rock the Mountains Festival",

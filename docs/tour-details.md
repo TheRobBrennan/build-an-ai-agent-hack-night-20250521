@@ -77,7 +77,7 @@
 
 ## Logistics Notes
 
-- Transportation arrangements for gear still to be determined
+- Two fans will be driving a van with gear (drums, amps, guitars, merchandise, etc.) from Seattle to meet the band at BWI
 - The band has never played at any of these venues before
 - Venue research and contact information to be gathered
 - Need to identify local bands to potentially share the bill with
