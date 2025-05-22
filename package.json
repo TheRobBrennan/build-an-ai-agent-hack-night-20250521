@@ -14,6 +14,7 @@
   "author": "Rob Brennan <rob@sploosh.ai>",
   "scripts": {
     "start": "docker-compose up -d",
+    "start:clean": "npm run docker:build && npm start",
     "stop": "docker-compose down",
     "restart": "docker-compose restart",
     "logs": "docker-compose logs -f",
