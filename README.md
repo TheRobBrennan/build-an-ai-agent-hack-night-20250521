@@ -30,7 +30,7 @@ This repository contains explorations and automations using [n8n](https://n8n.io
 ## Prerequisites
 
 - [Docker](https://www.docker.com/) (v20.10+ with Docker Compose v2.0+)
-- [Node.js](https://nodejs.org/) (v20 LTS or higher, for development)
+- [Node.js](https://nodejs.org/) (v22.12.0 or higher, for development)
 - [act](https://github.com/nektos/act) (v0.2.45+, for local GitHub Actions testing)
 
 ## Quick Start
