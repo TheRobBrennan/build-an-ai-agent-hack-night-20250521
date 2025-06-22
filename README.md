@@ -54,8 +54,10 @@ This repository contains explorations and automations using [n8n](https://n8n.io
 
 4. Access the Neo4j browser:
    [http://localhost:7474](http://localhost:7474)
-   - Username: `neo4j`
-   - Password: `bandtour2025`
+   - When prompted for connection details:
+     - Connect URL: `bolt://localhost:7687` (use the Bolt protocol)
+     - Username: `neo4j`
+     - Password: `bandtour2025`
 
 5. (Optional) Import example workflows from the `workflows/examples/` directory.
 
