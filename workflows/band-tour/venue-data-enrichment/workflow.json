@@ -1,0 +1,561 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        100
+      ],
+      "id": "f8d99696-5024-4808-9f55-33ab64950ef1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enrich-venue",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        100
+      ],
+      "id": "cd629db0-75e4-4fa7-93a6-5c7d8c0db1a8",
+      "webhookId": "7787001c-c872-490b-a317-1966f16676dc"
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "requestMethod": "POST",
+        "url": "http://neo4j:7474/db/neo4j/tx/commit",
+        "options": {
+          "bodyContentType": "json",
+          "body": {
+            "statements": [
+              {
+                "statement": "MATCH (v:Venue {name: $venueName, city: $city, state: $state}) RETURN v",
+                "parameters": {
+                  "venueName": "={{ $json.venueName }}",
+                  "city": "={{ $json.city }}",
+                  "state": "={{ $json.state }}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Get Venue Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        100
+      ],
+      "id": "82f5dbb7-2789-4788-af3b-0f69dd32c63e",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "MdhYRGIUnLHGWCMp",
+          "name": "Neo4j HTTP Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.records.length }}",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "name": "Venue Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        100
+      ],
+      "id": "ad1f3fd0-6fd7-4d07-bebf-c815a1ff53cf"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": false, \"message\": \"Venue not found. Please run venue-research workflow first.\"} }}",
+        "options": {}
+      },
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "82a28fba-2324-4df3-b992-9bba981679a4"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create sample venue data for testing\n// This will be used if no venue is found in the database\n\nconst venueName = $input.item.json.venueName;\nconst city = $input.item.json.city;\nconst state = $input.item.json.state;\n\n// Create a sample venue record with coordinates based on state\nlet lat, lon;\n\nif (state === 'NY') {\n  lat = 40.7128;\n  lon = -74.0060;\n} else if (state === 'PA') {\n  lat = 39.9526;\n  lon = -75.1652;\n} else if (state === 'MD') {\n  lat = 39.2904;\n  lon = -76.6122;\n} else if (state === 'DC') {\n  lat = 38.9072;\n  lon = -77.0369;\n} else if (state === 'NJ') {\n  lat = 40.0583;\n  lon = -74.4057;\n} else {\n  // Default to NYC area if state is unknown\n  lat = 40.7128;\n  lon = -74.0060;\n}\n\nreturn {\n  venueName: venueName,\n  city: city,\n  state: state,\n  lat: lat,\n  lon: lon,\n  records: [\n    {\n      v: {\n        properties: {\n          name: venueName,\n          city: city,\n          state: state,\n          address: venueName + \", \" + city + \", \" + state,\n          website: \"https://example.com/\" + venueName.toLowerCase().replace(/ /g, \"-\"),\n          latitude: lat,\n          longitude: lon\n        }\n      }\n    }\n  ]\n};"
+      },
+      "name": "Create Sample Venue",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -100
+      ],
+      "id": "b2a28fba-2324-4df3-b992-9bba981679a5"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare data for OpenStreetMap Geocoding\n// This ensures we have the right format regardless of where the data comes from\n\n// First, check if we already have lat/lon directly in the data\nif ($input.item.json.lat && $input.item.json.lon) {\n  return {\n    venueName: $input.item.json.venueName,\n    city: $input.item.json.city,\n    state: $input.item.json.state,\n    lat: $input.item.json.lat,\n    lon: $input.item.json.lon,\n    records: $input.item.json.records,\n    searchQuery: $input.item.json.records[0].v.properties.name + ' ' + \n                $input.item.json.records[0].v.properties.city + ' ' + \n                $input.item.json.records[0].v.properties.state\n  };\n}\n\n// Otherwise, just pass through the data\nreturn $input.item.json;"
+      },
+      "name": "Prepare Geocoding Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        220,
+        100
+      ],
+      "id": "c3a28fba-2324-4df3-b992-9bba981679a6"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare data for Venue Area Details\n// This ensures we have the right format for lat/lon parameters\n\n// OpenStreetMap Geocoding returns an array of results\nconst data = $input.item.json;\n\n// Check if we have geocoding results\nif (Array.isArray(data) && data.length > 0) {\n  // Extract lat/lon from the first result\n  return {\n    lat: data[0].lat,\n    lon: data[0].lon\n  };\n}\n\n// If we don't have geocoding results but have lat/lon directly\nif (data.lat && data.lon) {\n  return {\n    lat: data.lat,\n    lon: data.lon\n  };\n}\n\n// Fallback to sample coordinates for NYC\nreturn {\n  lat: 40.7128,\n  lon: -74.0060\n};"
+      },
+      "name": "Prepare Area Details Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        440,
+        100
+      ],
+      "id": "d4a28fba-2324-4df3-b992-9bba981679a7"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "venueName",
+              "value": "={{ $json.venueName }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "name": "state",
+              "value": "={{ $json.state }}"
+            },
+            {
+              "name": "wikipediaInfo",
+              "value": "={{ $('Wikipedia Info').item.json.query && $('Wikipedia Info').item.json.query.pages ? Object.values($('Wikipedia Info').item.json.query.pages)[0].extract || 'No Wikipedia information found for ' + $json.venueName : 'No Wikipedia information found for ' + $json.venueName }}"
+            },
+            {
+              "name": "areaDetails",
+              "value": "={{ $('Venue Area Details').item.json.address ? JSON.stringify($('Venue Area Details').item.json.address) : 'No area details found for ' + $json.venueName }}"
+            },
+            {
+              "name": "nearbyParking",
+              "value": "={{ Array.isArray($('Nearby Parking').item.json) && $('Nearby Parking').item.json.length > 0 ? JSON.stringify($('Nearby Parking').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
+            },
+            {
+              "name": "nearbyHotels",
+              "value": "={{ Array.isArray($('Nearby Hotels').item.json) && $('Nearby Hotels').item.json.length > 0 ? JSON.stringify($('Nearby Hotels').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
+            },
+            {
+              "name": "nearbyRestaurants",
+              "value": "={{ Array.isArray($('Nearby Restaurants').item.json) && $('Nearby Restaurants').item.json.length > 0 ? JSON.stringify($('Nearby Restaurants').item.json.map(place => ({ name: place.display_name.split(',')[0], distance: place.importance, address: place.display_name }))) : '[]' }}"
+            },
+            {
+              "name": "localTime",
+              "value": "={{ new Date().toLocaleTimeString() }}"
+            },
+            {
+              "name": "lastUpdated",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Venue Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        880,
+        100
+      ],
+      "id": "569850b8-552f-4de0-af5b-a35f06a0435e"
+    },
+    {
+      "parameters": {
+        "url": "=https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&redirects=true&titles={{ $json.records[0].v.properties.name }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}",
+        "options": {}
+      },
+      "name": "Wikipedia Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ],
+      "id": "a821c07e-15d8-4aa8-bebf-e2a1cf203001"
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/search?q={{ $json.searchQuery || ($json.records[0].v.properties.name + ' ' + $json.records[0].v.properties.city + ' ' + $json.records[0].v.properties.state) }}&format=json&limit=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "OpenStreetMap Geocoding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        220,
+        200
+      ],
+      "id": "83533dcd-f552-4193-9ab4-b3f1dce4d2c3"
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/reverse?lat={{ $json.lat }}&lon={{ $json.lon }}&format=json&zoom=16&addressdetails=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Venue Area Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        440,
+        200
+      ],
+      "id": "c4357339-7e0c-4a1d-99fe-734d2f067827"
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/search?q=parking%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Nearby Parking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        660,
+        200
+      ],
+      "id": "8d989610-8b0f-45fb-aa09-691c1b3ff373"
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/search?q=hotels%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Nearby Hotels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        880,
+        200
+      ],
+      "id": "0dfda5bd-e206-404d-9801-90b5e2ef806b"
+    },
+    {
+      "parameters": {
+        "url": "=https://nominatim.openstreetmap.org/search?q=restaurants%20near%20{{ $json.records[0].v.properties.address }}%20{{ $json.records[0].v.properties.city }}%20{{ $json.records[0].v.properties.state }}&format=json&limit=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "WOATW Tour Management System"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Nearby Restaurants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        200
+      ],
+      "id": "df3d99a8-1142-4a4e-9d91-aa72f788d824"
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "requestMethod": "POST",
+        "url": "http://neo4j:7474/db/neo4j/tx/commit",
+        "options": {
+          "bodyContentType": "json",
+          "body": {
+            "statements": [
+              {
+                "statement": "MERGE (v:Venue {name: $venueName, city: $city, state: $state}) ON MATCH SET v.wikipediaInfo = $wikipediaInfo, v.areaDetails = $areaDetails, v.nearbyParking = $nearbyParking, v.nearbyHotels = $nearbyHotels, v.nearbyRestaurants = $nearbyRestaurants, v.localTime = $localTime, v.lastUpdated = $lastUpdated, v.lastEnriched = datetime() ON CREATE SET v.wikipediaInfo = $wikipediaInfo, v.areaDetails = $areaDetails, v.nearbyParking = $nearbyParking, v.nearbyHotels = $nearbyHotels, v.nearbyRestaurants = $nearbyRestaurants, v.localTime = $localTime, v.lastUpdated = $lastUpdated, v.lastEnriched = datetime() RETURN v",
+                "parameters": {
+                  "venueName": "={{ $json.venueName }}",
+                  "city": "={{ $json.city }}",
+                  "state": "={{ $json.state }}",
+                  "wikipediaInfo": "={{ $json.wikipediaInfo }}",
+                  "areaDetails": "={{ $json.areaDetails }}",
+                  "nearbyParking": "={{ $json.nearbyParking }}",
+                  "nearbyHotels": "={{ $json.nearbyHotels }}",
+                  "nearbyRestaurants": "={{ $json.nearbyRestaurants }}",
+                  "localTime": "={{ $json.localTime }}",
+                  "lastUpdated": "={{ $json.lastUpdated }}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Update Venue in Neo4j",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        200
+      ],
+      "id": "56a0c97f-d739-444e-ba47-b70a7a9833c6",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "MdhYRGIUnLHGWCMp",
+          "name": "Neo4j HTTP Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": true, \"message\": \"Venue data enriched successfully\", \"data\": $json} }}",
+        "options": {}
+      },
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        200
+      ],
+      "id": "7058d37b-8c72-4c05-990d-9d0791dc3ba3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Venue Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Venue Data": {
+      "main": [
+        [
+          {
+            "node": "Venue Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Venue Exists?": {
+      "main": [
+        [
+          {
+            "node": "Create Sample Venue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wikipedia Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sample Venue": {
+      "main": [
+        [
+          {
+            "node": "Wikipedia Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia Info": {
+      "main": [
+        [
+          {
+            "node": "Prepare Geocoding Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Geocoding Data": {
+      "main": [
+        [
+          {
+            "node": "OpenStreetMap Geocoding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenStreetMap Geocoding": {
+      "main": [
+        [
+          {
+            "node": "Prepare Area Details Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Area Details Data": {
+      "main": [
+        [
+          {
+            "node": "Venue Area Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Venue Area Details": {
+      "main": [
+        [
+          {
+            "node": "Nearby Parking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Parking": {
+      "main": [
+        [
+          {
+            "node": "Nearby Hotels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Hotels": {
+      "main": [
+        [
+          {
+            "node": "Nearby Restaurants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nearby Restaurants": {
+      "main": [
+        [
+          {
+            "node": "Set Venue Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Venue Data": {
+      "main": [
+        [
+          {
+            "node": "Update Venue in Neo4j",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Venue in Neo4j": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "69d27955-2dc9-43c7-aa77-af78a95c6220",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "53cf3c3cdbfa9c4d9b323d47a4840b094153e8a0280c33af416acdb75335600d"
+  },
+  "id": "58IBnLpR0dTiJnZL",
+  "tags": []
+}
