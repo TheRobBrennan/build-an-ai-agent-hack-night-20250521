@@ -52,7 +52,12 @@ This repository contains explorations and automations using [n8n](https://n8n.io
 3. Access the n8n editor:
    [http://localhost:5678](http://localhost:5678)
 
-4. (Optional) Import example workflows from the `workflows/examples/` directory.
+4. Access the Neo4j browser:
+   [http://localhost:7474](http://localhost:7474)
+   - Username: `neo4j`
+   - Password: `bandtour2025`
+
+5. (Optional) Import example workflows from the `workflows/examples/` directory.
 
 ## Project Structure
 
